@@ -6,5 +6,9 @@ Ideally, you could also move mac applications to different windows this way.
 
 Could potentially add a feature where additions to the list launch apps, maybe by fetching a list of apps and having nvim_cmp auto complete.
 
+Name inspired because kill apps and "mac" is "cam" backwards.
+
+I don't like Mars Voltra, ignore the spotify suggestion.
+
 
 https://github.com/when-harry-met-sally/killa-cam/assets/37314987/3a7a385f-bba4-4c52-b36e-70725bbafff9
