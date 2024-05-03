@@ -4,8 +4,28 @@
 INITIAL_APPS=$(mktemp)
 EDITED_APPS=$(mktemp)
 
-# Fetch initial list of applications and open in Neovim for editing
-osascript -e 'tell application "System Events" to get the name of every application process where background only is false' | sed 's/, /\n/g' >$INITIAL_APPS
+# Fetch initial list of applications including .app suffix and open in Neovim for editing
+osascript -e '
+tell application "System Events"
+    set appList to ""
+    set allApps to every application process where background only is false
+    repeat with i from 1 to count of allApps
+        set anApp to item i of allApps
+        try
+            if exists file of anApp then
+                set appName to name of file of anApp
+            else
+                set appName to name of anApp
+            end if
+            set appList to appList & appName
+            if i is not (count of allApps) then
+                set appList to appList & "\n"
+            end if
+        end try
+    end repeat
+    return appList
+end tell' >$INITIAL_APPS
+
 cp $INITIAL_APPS $EDITED_APPS
 nvim $EDITED_APPS
 
@@ -34,7 +54,9 @@ else
 		if [[ $confirm =~ ^[Yy]$ ]]; then
 			for APP in "${MISSING_APPS[@]}"; do
 				echo "Closing $APP..."
-				osascript -e "tell application \"$APP\" to quit"
+				# Extract only the app name for the quit command
+				APP_NAME=$(echo "$APP" | sed 's/\.app$//i')
+				osascript -e "tell application \"$APP_NAME\" to quit"
 			done
 			echo "Applications closed."
 		else
