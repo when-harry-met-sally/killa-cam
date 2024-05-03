@@ -29,36 +29,56 @@ end tell' >$INITIAL_APPS
 cp $INITIAL_APPS $EDITED_APPS
 nvim $EDITED_APPS
 
-# Checking for changes and finding applications to close
+# Checking for changes and finding applications to close and to open
 if diff $INITIAL_APPS $EDITED_APPS >/dev/null; then
 	echo "No changes detected."
 else
-	echo "Changes detected. Finding applications to close..."
+	echo "Changes detected. Analyzing..."
 	MISSING_APPS=()
+	NEW_APPS=()
 	while IFS= read -r line; do
 		if ! grep -Fxq "$line" $EDITED_APPS; then
 			MISSING_APPS+=("$line")
 		fi
 	done <$INITIAL_APPS
 
-	if [ ${#MISSING_APPS[@]} -eq 0 ]; then
-		echo "No applications to close."
-	else
-		echo "The following applications will be closed:"
-		for APP in "${MISSING_APPS[@]}"; do
-			printf "\t- %s\n" "$APP"
-		done
+	while IFS= read -r line; do
+		if ! grep -Fxq "$line" $INITIAL_APPS; then
+			NEW_APPS+=("$line")
+		fi
+	done <$EDITED_APPS
 
-		# Ask for confirmation before closing applications
-		read -p "Are you sure you want to close these applications? (y/n) " confirm
+	if [ ${#MISSING_APPS[@]} -eq 0 ] && [ ${#NEW_APPS[@]} -eq 0 ]; then
+		echo "No applications to close or open."
+	else
+		if [ ${#MISSING_APPS[@]} -ne 0 ]; then
+			echo "The following applications will be closed:"
+			for APP in "${MISSING_APPS[@]}"; do
+				printf "\t- %s\n" "$APP"
+			done
+		fi
+
+		if [ ${#NEW_APPS[@]} -ne 0 ]; then
+			echo "The following applications will be opened:"
+			for APP in "${NEW_APPS[@]}"; do
+				printf "\t- %s\n" "$APP"
+			done
+		fi
+
+		# Ask for confirmation before closing/opening applications
+		read -p "Proceed with closing/opening applications? (y/n) " confirm
 		if [[ $confirm =~ ^[Yy]$ ]]; then
 			for APP in "${MISSING_APPS[@]}"; do
 				echo "Closing $APP..."
-				# Extract only the app name for the quit command
 				APP_NAME=$(echo "$APP" | sed 's/\.app$//i')
 				osascript -e "tell application \"$APP_NAME\" to quit"
 			done
-			echo "Applications closed."
+			for APP in "${NEW_APPS[@]}"; do
+				echo "Opening $APP..."
+				APP_NAME=$(echo "$APP" | sed 's/\.app$//i')
+				osascript -e "tell application \"$APP_NAME\" to activate" 2>/dev/null || echo "Warning: Failed to open $APP_NAME. It might not exist."
+			done
+			echo "Applications updated."
 		else
 			echo "Operation cancelled."
 		fi

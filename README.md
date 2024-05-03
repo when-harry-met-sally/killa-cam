@@ -11,3 +11,9 @@ Name inspired because kill apps and "mac" is "cam" backwards.
 I don't like Mars Voltra, ignore the spotify suggestion in video.
 
 https://github.com/when-harry-met-sally/killa-cam/assets/37314987/3a7a385f-bba4-4c52-b36e-70725bbafff9
+
+## Changelog
+- Added the ability to launch apps with additions, full app names + .App must be spelled out.
+
+## Todo
+- nvim auto completion for all apps
